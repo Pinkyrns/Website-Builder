@@ -1,264 +1,266 @@
-// // src/builder/state/useBuilderStore.js
-// import { useState } from "react";
+// import { create } from 'zustand'
+// import { persist } from 'zustand/middleware'
+// import { gadgetStoreTemplate } from '../../gadgetStoreTemplate.js'
 
-// export const useBuilderStore = () => {
-//   const [elements, setElements] = useState([
-//     { id: "title", type: "text", tag: "h1", text: "Welcome to My Website", style: {} },
-//     { id: "description", type: "text", tag: "p", text: "This is a customizable paragraph.", style: {} },
-//     { id: "button1", type: "button", tag: "button", text: "Click Me", style: {} },
-//   ]);
+// export const useBuilderStore = create(
+//   persist(
+//     (set, get) => ({
+//       websites: [],
+//       currentWebsite: null,
+//       currentPage: 'home',
 
-//   const [selectedId, setSelectedId] = useState(null);
+//       pages: [
+//         {
+//           id: 'home',
+//           name: 'Home',
+//           html: '',
+//           css: '',
+//           js: ''
+//         }
+//       ],
 
-//   const addElement = (type) => {
-//     const id = `${type}-${Date.now()}`;
-//     let newEl;
+//       selectedNode: null,
+//       activeView: 'desktop',
+//       isPreviewMode: false,
+//       showCodeEditor: false,
 
-//     switch (type) {
-//       case "text":
-//         newEl = { id, type, tag: "p", text: "New Text", style: {} };
-//         break;
-//       case "button":
-//         newEl = { id, type, tag: "button", text: "New Button", style: {} };
-//         break;
-//       case "image":
-//         newEl = { id, type, tag: "img", src: "https://via.placeholder.com/150", style: { width: "150px", height: "150px" } };
-//         break;
-//       case "hero":
-//         newEl = { id, type, tag: "div", text: "Hero Section", style: { padding: "50px", backgroundColor: "#eee", textAlign: "center" } };
-//         break;
-//       default:
-//         newEl = { id, type, tag: "div", text: "New Div", style: {} };
+//       /* ---------- WEBSITE CREATION (FIX) ---------- */
+
+//       createWebsite: (name, templateId = 'gadget-store') => {
+//         const website = {
+//           id: Date.now().toString(),
+//           name,
+//           templateId,
+//           createdAt: Date.now()
+//         }
+
+//         set(state => ({
+//           websites: [...state.websites, website],
+//           currentWebsite: website,
+//           currentPage: 'home'
+//         }))
+
+//         return website
+//       },
+
+//       /* ---------- TEMPLATE LOAD ---------- */
+
+//       loadGadgetTemplate: () => {
+//         set(state => ({
+//           pages: state.pages.map(p =>
+//             p.id === state.currentPage
+//               ? {
+//                   ...p,
+//                   html: gadgetStoreTemplate.html,
+//                   css: gadgetStoreTemplate.css,
+//                   js: gadgetStoreTemplate.js
+//                 }
+//               : p
+//           )
+//         }))
+//       },
+
+//       /* ---------- CORE ACTIONS ---------- */
+
+//       loadWebsite: (id) => {
+//         const site = get().websites.find(w => w.id === id)
+//         if (!site) return null
+//         set({ currentWebsite: site, currentPage: 'home' })
+//         return site
+//       },
+// saveHtmlFromIframe: (html) => {
+//   set(state => ({
+//     pages: state.pages.map(p =>
+//       p.id === state.currentPage
+//         ? { ...p, html }
+//         : p
+//     )
+//   }))
+// }
+// ,
+// addElementToPage: (type) => {
+//   set((state) => {
+//     const page = state.pages.find(p => p.id === state.currentPage)
+//     if (!page) return {}
+
+//     let html = page.html || ''
+
+//     if (type === 'text') {
+//       html += `<p data-editable="true">New Text</p>`
 //     }
 
-//     setElements([...elements, newEl]);
-//     setSelectedId(id);
-//   };
+//     if (type === 'heading') {
+//       html += `<h2 data-editable="true">New Heading</h2>`
+//     }
 
-//   const removeElement = (id) => {
-//     setElements(elements.filter(el => el.id !== id));
-//     if (selectedId === id) setSelectedId(null);
-//   };
+//     if (type === 'button') {
+//       html += `<button data-editable="true">Click Me</button>`
+//     }
 
-//   const updateElement = (id, newProps) => {
-//     setElements(elements.map(el => (el.id === id ? { ...el, ...newProps } : el)));
-//   };
+//     if (type === 'image') {
+//       html += `<img src="/templates/gadget-store/images/item1.png" style="max-width:200px;" />`
+//     }
 
-//   return { elements, selectedId, setSelectedId, addElement, removeElement, updateElement };
-// };
+//     if (type === 'divider') {
+//       html += `<hr />`
+//     }
+
+//     return {
+//       pages: state.pages.map(p =>
+//         p.id === state.currentPage ? { ...p, html } : p
+//       )
+//     }
+//   })
+// },
+
+//       setCurrentPage: (id) => set({ currentPage: id }),
+//       setSelectedNode: (node) => set({ selectedNode: node }),
+
+//       updatePageCode: (type, value) => {
+//         set(state => ({
+//           pages: state.pages.map(p =>
+//             p.id === state.currentPage
+//               ? { ...p, [type]: value }
+//               : p
+//           )
+//         }))
+//       },
+
+//       importTemplate: ({ html, css, js }) => {
+//         set(state => ({
+//           pages: state.pages.map(p =>
+//             p.id === state.currentPage
+//               ? { ...p, html, css, js }
+//               : p
+//           )
+//         }))
+//       },
+
+//       toggleCodeEditor: () =>
+//         set(state => ({ showCodeEditor: !state.showCodeEditor })),
+
+//       setActiveView: (view) => set({ activeView: view }),
+//     }),
+//     {
+//       name: 'builder-storage',
+//       version: 3 // IMPORTANT
+//     }
+//   )
+// )
+
+
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 
-export const useBuilderStore = create(
-  persist(
-    (set, get) => ({
-      // Websites
-      websites: [
-        {
-          id: '1',
-          name: 'My Portfolio',
-          template: 'portfolio',
-          updatedAt: '2 hours ago',
-          isPublished: true,
-          pages: ['home', 'about', 'projects']
-        },
-        {
-          id: '2',
-          name: 'Business Website',
-          template: 'business',
-          updatedAt: '1 day ago',
-          isPublished: false,
-          pages: ['home', 'services', 'contact']
-        }
-      ],
-      
-      // Current Website
-      currentWebsite: null,
-      currentPage: 'home',
-      
-      // Pages for current website
-      pages: [
-        { id: 'home', name: 'Home', elements: [] },
-        { id: 'about', name: 'About', elements: [] },
-        { id: 'contact', name: 'Contact', elements: [] }
-      ],
-      
-      // Editor State
-      isPreviewMode: false,
-      activeView: 'desktop',
-      showCodeEditor: false,
-      selectedElement: null,
-      
-      // History
-      canUndo: false,
-      canRedo: false,
-      historyStack: [],
-      redoStack: [],
-      
-      // Status
-      status: 'saved', // saved, saving, published, unsaved
-      lastSaved: null,
-      isPublished: false,
-      lastPublished: null,
-      
-      // Actions
-      setCurrentWebsite: (websiteId) => {
-        const website = get().websites.find(w => w.id === websiteId)
-        set({ currentWebsite: website })
-      },
-      
-      loadWebsite: (websiteId) => {
-        const website = get().websites.find(w => w.id === websiteId)
-        if (website) {
-          set({ currentWebsite: website, currentPage: 'home' })
-        }
-        return website
-      },
-      
-      createWebsite: (name, template = 'blank') => {
-        const newWebsite = {
-          id: Date.now().toString(),
-          name,
-          template,
-          updatedAt: 'Just now',
-          isPublished: false,
-          pages: ['home']
-        }
-        
-        set(state => ({
-          websites: [...state.websites, newWebsite],
-          currentWebsite: newWebsite
-        }))
-        
-        return newWebsite
-      },
-      
-      deleteWebsite: (websiteId) => {
-        set(state => ({
-          websites: state.websites.filter(w => w.id !== websiteId),
-          currentWebsite: state.currentWebsite?.id === websiteId ? null : state.currentWebsite
-        }))
-      },
-      
-      duplicateWebsite: (websiteId) => {
-        const website = get().websites.find(w => w.id === websiteId)
-        if (website) {
-          const duplicated = {
-            ...website,
-            id: Date.now().toString(),
-            name: `${website.name} (Copy)`,
-            updatedAt: 'Just now'
-          }
-          
-          set(state => ({
-            websites: [...state.websites, duplicated]
-          }))
-        }
-      },
-      
-      setCurrentPage: (pageId) => {
-        set({ currentPage: pageId })
-      },
-      
-      addPage: (name) => {
-        const newPage = {
-          id: `page-${Date.now()}`,
-          name,
-          elements: []
-        }
-        
-        set(state => ({
-          pages: [...state.pages, newPage]
-        }))
-        
-        return newPage
-      },
-      
-      togglePreviewMode: () => {
-        set(state => ({ isPreviewMode: !state.isPreviewMode }))
-      },
-      
-      setActiveView: (view) => {
-        const validViews = ['desktop', 'tablet', 'mobile']
-        if (validViews.includes(view)) {
-          set({ activeView: view })
-        }
-      },
-      
-      toggleCodeEditor: () => {
-        set(state => ({ showCodeEditor: !state.showCodeEditor }))
-      },
-      
-      undo: () => {
-        const { historyStack, redoStack } = get()
-        if (historyStack.length > 0) {
-          const lastAction = historyStack[historyStack.length - 1]
-          set({
-            historyStack: historyStack.slice(0, -1),
-            redoStack: [...redoStack, lastAction],
-            canUndo: historyStack.length > 1,
-            canRedo: true,
-            status: 'unsaved'
-          })
-        }
-      },
-      
-      redo: () => {
-        const { historyStack, redoStack } = get()
-        if (redoStack.length > 0) {
-          const nextAction = redoStack[redoStack.length - 1]
-          set({
-            historyStack: [...historyStack, nextAction],
-            redoStack: redoStack.slice(0, -1),
-            canRedo: redoStack.length > 1,
-            canUndo: true,
-            status: 'unsaved'
-          })
-        }
-      },
-      
-      saveDraft: () => {
-        set({ status: 'saving' })
-        
-        // Simulate API call
-        setTimeout(() => {
-          set({
-            status: 'saved',
-            lastSaved: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          })
-        }, 1000)
-      },
-      
-      publish: () => {
-        const { isPublished } = get()
-        set({ status: 'saving' })
-        
-        // Simulate API call
-        setTimeout(() => {
-          set({
-            status: 'published',
-            isPublished: true,
-            lastPublished: new Date().toLocaleString()
-          })
-        }, 1500)
-      },
-      
-      recordAction: (action) => {
-        set(state => ({
-          historyStack: [...state.historyStack, action],
-          canUndo: true,
-          redoStack: [],
-          canRedo: false,
-          status: 'unsaved'
-        }))
-      }
-    }),
-    {
-      name: 'builder-storage',
-      partialize: (state) => ({
-        websites: state.websites,
-        currentWebsite: state.currentWebsite
-      })
+export const useBuilderStore = create((set, get) => ({
+  /* ================= GRAPESJS ================= */
+  editor: null,
+  setEditor: (editor) => set({ editor }),
+
+  /* ================= CMS STATE ================= */
+  websites: [],
+  currentWebsite: null,
+
+  currentPage: 'home',
+
+  pages: [
+    { id: 'home', name: 'Home', html: '', css: '', js: '' },
+    { id: 'about', name: 'About', html: '', css: '', js: '' },
+    { id: 'contact', name: 'Contact', html: '', css: '', js: '' },
+  ],
+
+  activeView: 'desktop',
+  showCodeEditor: false,
+
+  /* ================= WEBSITE ================= */
+  createWebsite: (name) => {
+    const website = {
+      id: Date.now().toString(),
+      name,
+      createdAt: Date.now(),
     }
-  )
-)
+
+    set({
+      websites: [...get().websites, website],
+      currentWebsite: website,
+      currentPage: 'home',
+    })
+
+    return website
+  },
+
+  loadWebsite: (id) => {
+    const site = get().websites.find(w => w.id === id)
+    if (!site) return null
+
+    set({
+      currentWebsite: site,
+      currentPage: 'home',
+    })
+
+    return site
+  },
+
+  /* ================= PAGE ACTIONS ================= */
+
+  saveFromEditor: () => {
+    const editor = get().editor
+    if (!editor) return
+
+    const html = editor.getHtml()
+    const css = editor.getCss()
+
+    set(state => ({
+      pages: state.pages.map(p =>
+        p.id === state.currentPage
+          ? { ...p, html, css }
+          : p
+      ),
+    }))
+  },
+
+  setCurrentPage: (pageId) => {
+    const editor = get().editor
+
+    // 🔴 AUTO-SAVE CURRENT PAGE BEFORE SWITCH
+    if (editor) {
+      const html = editor.getHtml()
+      const css = editor.getCss()
+
+      set(state => ({
+        pages: state.pages.map(p =>
+          p.id === state.currentPage
+            ? { ...p, html, css }
+            : p
+        ),
+      }))
+    }
+
+    set({ currentPage: pageId })
+  },
+
+  addPage: (name) => {
+    const id = name.toLowerCase().replace(/\s+/g, '-')
+
+    set(state => ({
+      pages: [
+        ...state.pages,
+        { id, name, html: '', css: '', js: '' },
+      ],
+    }))
+  },
+
+  importTemplate: ({ html, css, js }) => {
+    set(state => ({
+      pages: state.pages.map(p =>
+        p.id === state.currentPage
+          ? { ...p, html, css, js }
+          : p
+      ),
+    }))
+  },
+
+  toggleCodeEditor: () =>
+    set(state => ({ showCodeEditor: !state.showCodeEditor })),
+
+  setActiveView: (view) => set({ activeView: view }),
+}))

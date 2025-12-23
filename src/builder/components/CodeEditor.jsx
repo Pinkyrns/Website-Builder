@@ -1,91 +1,97 @@
-// src/builder/components/CodeEditor.jsx - SIMPLE VERSION (NO CODEMIRROR)
-import React, { useState } from 'react'
-import { Icons } from '../../components/Icons/Icons.jsx'
-import { cn } from '../../utils/index.js'
-import { useBuilderStore } from '../state/useBuilderStore.js'
+// import React, { useState } from 'react'
+// import { useBuilderStore } from '../state/useBuilderStore'
+
+// const CodeEditor = () => {
+//   const { pages, currentPage, updatePageCode } = useBuilderStore()
+//   const page = pages.find(p => p.id === currentPage)
+
+//   const [tab, setTab] = useState('html')
+
+//   return (
+//     <div className="h-full flex flex-col bg-gray-900">
+//       <div className="flex gap-2 p-2">
+//         {['html','css','js'].map(t => (
+//           <button key={t} onClick={() => setTab(t)}>{t}</button>
+//         ))}
+//       </div>
+//       <textarea
+//         className="flex-1 bg-black text-white p-4"
+//         value={page[tab]}
+//         onChange={(e) => updatePageCode(tab, e.target.value)}
+//       />
+//     </div>
+//   )
+// }
+
+// export default CodeEditor
+
+
+
+import React, { useState, useEffect } from 'react'
+import { useBuilderStore } from '../state/useBuilderStore'
 
 const CodeEditor = () => {
-  const [activeTab, setActiveTab] = useState('html')
-  const { isPreviewMode, toggleCodeEditor } = useBuilderStore()
+  const {
+    pages,
+    currentPage,
+    updatePageCode,
+    editor,
+  } = useBuilderStore()
 
-  // Sample code
-  const [htmlCode, setHtmlCode] = useState(`<!DOCTYPE html>
-<html>
-<head>
-    <title>My Site</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <h1>Welcome</h1>
-</body>
-</html>`)
+  const page = pages.find(p => p.id === currentPage)
+  const [tab, setTab] = useState('html')
+  const [value, setValue] = useState('')
 
-  const [cssCode, setCssCode] = useState(`body {
-    font-family: sans-serif;
-    margin: 0;
-    padding: 20px;
-}
+  /* ---------------- SYNC FROM STATE ---------------- */
 
-h1 {
-    color: #333;
-}`)
+  useEffect(() => {
+    if (!page) return
+    setValue(page[tab] || '')
+  }, [page, tab])
 
-  const [jsCode, setJsCode] = useState(`console.log('Hello World');`)
+  /* ---------------- APPLY TO GRAPESJS ---------------- */
 
-  const getCurrentCode = () => {
-    switch (activeTab) {
-      case 'html': return htmlCode
-      case 'css': return cssCode
-      case 'js': return jsCode
-      default: return ''
+  const applyChanges = (val) => {
+    if (!editor) return
+
+    if (tab === 'html') {
+      editor.setComponents(val)
     }
-  }
 
-  const setCurrentCode = (value) => {
-    switch (activeTab) {
-      case 'html': setHtmlCode(value); break
-      case 'css': setCssCode(value); break
-      case 'js': setJsCode(value); break
+    if (tab === 'css') {
+      editor.setStyle(val)
     }
+
+    // JS is stored only (not executed inside editor)
+    updatePageCode(tab, val)
   }
 
   return (
-    <div className="h-full flex flex-col bg-gray-900">
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
-        <div className="flex items-center gap-2">
-          {['html', 'css', 'js'].map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={cn(
-                "px-3 py-1.5 rounded text-sm font-medium",
-                activeTab === tab
-                  ? "bg-gray-900 text-white"
-                  : "text-gray-400 hover:text-white"
-              )}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-2">
+    <div className="h-full flex flex-col bg-gray-900 text-white">
+      {/* Tabs */}
+      <div className="flex gap-2 p-2 border-b border-gray-700">
+        {['html', 'css', 'js'].map(t => (
           <button
-            onClick={toggleCodeEditor}
-            className="p-2 text-gray-400 hover:text-white"
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-3 py-1 rounded text-sm ${
+              tab === t ? 'bg-gray-700' : 'bg-gray-800'
+            }`}
           >
-            <Icons.X className="w-4 h-4" />
+            {t.toUpperCase()}
           </button>
-        </div>
+        ))}
       </div>
-      
-      <div className="flex-1 overflow-auto">
-        <textarea
-          value={getCurrentCode()}
-          onChange={(e) => setCurrentCode(e.target.value)}
-          className="w-full h-full bg-transparent text-gray-300 font-mono text-sm p-4 resize-none focus:outline-none"
-          spellCheck={false}
-        />
-      </div>
+
+      {/* Editor */}
+      <textarea
+        className="flex-1 bg-black text-white p-4 font-mono text-sm outline-none"
+        value={value}
+        onChange={(e) => {
+          setValue(e.target.value)
+          applyChanges(e.target.value)
+        }}
+      />
     </div>
   )
 }
